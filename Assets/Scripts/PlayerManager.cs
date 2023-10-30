@@ -5,19 +5,23 @@ using UnityEngine;
 
 public class PlayerManager : MonoBehaviour
 {
-    private GameObject _avatar = null;
+    [SerializeField] private GameObject _avatar = null;
 
     void Start()
     {
-        Debug.Log(PhotonNetwork.CurrentRoom.Name);
-        //if (_avatar == null)
-        {
-            Debug.Log("asdasadasd");
-            float x = Random.Range(-2, 2f);
-            float y = Random.Range(-2, 2f);
+        StartCoroutine(CreatePlayer());
+    }
 
-            Vector3 spawn = new Vector3(x, y, 0);
-            _avatar = PhotonNetwork.Instantiate("Player", spawn, Quaternion.identity); // 플레이어 생성
-        }
+    IEnumerator CreatePlayer()
+    {
+        yield return new WaitUntil(() => GameManager.instance.isConnect);
+
+        Debug.Log(PhotonNetwork.CurrentRoom.Name);
+
+        float x = Random.Range(-2, 2f);
+        float y = Random.Range(-2, 2f);
+
+        Vector3 spawn = new Vector3(x, y, 0);
+        GameManager.instance.MyAvatar =  PhotonNetwork.Instantiate(_avatar.name, spawn, Quaternion.identity); // 플레이어 생성
     }
 }
