@@ -280,7 +280,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fbcfbd2629e1e46f7836d63676d70744, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  voiceRecorder: {fileID: 0}
-  joinBlueTeamButton: {fileID: 0}
-  joinRedTeamButton: {fileID: 0}
+  _voiceRecorder: {fileID: 0}
+  _createGroupButton: {fileID: 0}
+  _exitGroupButton: {fileID: 0}
   playerTeam: 0

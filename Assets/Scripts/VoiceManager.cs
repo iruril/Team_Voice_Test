@@ -7,18 +7,21 @@ using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine.UI;
 
-public class VoiceManager : MonoBehaviourPun
+using Hashtable = ExitGames.Client.Photon.Hashtable;
+
+public class VoiceManager : MonoBehaviourPunCallbacks
 {
+    private VoiceGroupManager _voiceGroupManager;
+
     [SerializeField]
     private Recorder _voiceRecorder;
 
     [SerializeField]
-    private Button _joinBlueTeamButton;
+    private Button _createGroupButton;
     [SerializeField]
-    private Button _joinRedTeamButton;
+    private Button _exitGroupButton;
 
-    private const byte BLUE_TEAM_GROUP = 1;
-    private const byte RED_TEAM_GROUP = 2;
+    private Hashtable _customProperty;
 
     public enum Team
     {
@@ -32,55 +35,57 @@ public class VoiceManager : MonoBehaviourPun
     private void Awake()
     {
         if (!photonView.IsMine) return;
+        _voiceGroupManager = GameObject.FindObjectOfType<VoiceGroupManager>().transform.GetComponent<VoiceGroupManager>();
         GameObject canvas = GameObject.Find("Canvas");
         _voiceRecorder = GameManager.instance.MyRecorder;
-        _joinBlueTeamButton = canvas.transform.GetChild(0).GetComponent<Button>();
-        _joinRedTeamButton = canvas.transform.GetChild(1).GetComponent<Button>();
+        _customProperty = PhotonNetwork.LocalPlayer.CustomProperties;
+
+        _createGroupButton = canvas.transform.GetChild(0).GetComponent<Button>();
+        _exitGroupButton = canvas.transform.GetChild(1).GetComponent<Button>();
     }
 
     void Start()
     {
         if (!photonView.IsMine) return;
-        _joinBlueTeamButton.onClick.AddListener(JoinBlueTeam);
-        _joinRedTeamButton.onClick.AddListener(JoinRedTeam);
+        _createGroupButton.onClick.AddListener(CreateVoiceGroup);
+        _exitGroupButton.onClick.AddListener(ExitCurrentVoiceGroup);
     }
 
-    private void JoinBlueTeam()
+    public void CreateVoiceGroup() //Test
     {
-        if (!photonView.IsMine) return;
-        playerTeam = Team.BlueTeam;
-        
-        SetupVoiceGroup();
-        UpdateUI();
-        Debug.Log(PhotonNetwork.LocalPlayer.UserId + " " + (Team)_voiceRecorder.InterestGroup);
+        if (PhotonNetwork.LocalPlayer.CustomProperties.ContainsKey("VoiceGroup")) return;
+
+        string[] users = { PhotonNetwork.LocalPlayer.NickName };
+        int[] pvIDs = { photonView.ViewID };
+
+        _voiceGroupManager.photonView.RPC("CreateVoiceGroup", RpcTarget.AllBufferedViaServer, users, pvIDs);
     }
 
-    private void JoinRedTeam()
-    {         
-        if (!photonView.IsMine) return;
-        playerTeam = Team.RedTeam;
-        SetupVoiceGroup();
-        UpdateUI();
-        Debug.Log(PhotonNetwork.LocalPlayer.UserId + " " + (Team)_voiceRecorder.InterestGroup);
-    }
-
-    private void SetupVoiceGroup()
+    public void ExitCurrentVoiceGroup()
     {
-        if (playerTeam == Team.BlueTeam)
-        {
-            PunVoiceClient.Instance.Client.OpChangeGroups(new byte[0], new byte[1] { BLUE_TEAM_GROUP });
-            _voiceRecorder.InterestGroup = BLUE_TEAM_GROUP;
-        }
-        else if (playerTeam == Team.RedTeam)
-        {
-            PunVoiceClient.Instance.Client.OpChangeGroups(new byte[0], new byte[1] { RED_TEAM_GROUP });
-            _voiceRecorder.InterestGroup = RED_TEAM_GROUP;
-        }
+        if (_voiceRecorder.InterestGroup == 0) return;
+
+        string user = PhotonNetwork.LocalPlayer.NickName;
+        byte groupID = (byte)PhotonNetwork.LocalPlayer.CustomProperties["VoiceGroup"];
+        _voiceGroupManager.photonView.RPC("ExitSpecificVoiceGroup", RpcTarget.AllBufferedViaServer, user, groupID);
+
+        PunVoiceClient.Instance.Client.OpChangeGroups(new byte[0], null);
+        _voiceRecorder.InterestGroup = 0;
+
+        _customProperty.Remove("VoiceGroup");
+        PhotonNetwork.LocalPlayer.SetCustomProperties(_customProperty);
     }
 
-    private void UpdateUI()
+    [PunRPC]
+    public void EnterVoiceGroup(byte groupID, int pvID)
     {
-        _joinBlueTeamButton.interactable = (playerTeam != Team.BlueTeam);
-        _joinRedTeamButton.interactable = (playerTeam != Team.RedTeam);
+        if (photonView.ViewID != pvID || !photonView.IsMine) return;
+        Debug.Log("VM : " + photonView.ViewID);
+
+        PunVoiceClient.Instance.Client.OpChangeGroups(new byte[0], new byte[1] { groupID });
+        _voiceRecorder.InterestGroup = groupID;
+
+        _customProperty.Add("VoiceGroup", groupID);
+        PhotonNetwork.LocalPlayer.SetCustomProperties(_customProperty);
     }
 }

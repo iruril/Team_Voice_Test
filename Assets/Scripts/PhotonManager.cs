@@ -22,14 +22,16 @@ public class PhotonManager : MonoBehaviourPunCallbacks
 
     public override void OnConnectedToMaster()
     {
-        Debug.Log("PUN OnConnectedToMaster " + PhotonNetwork.NetworkClientState.ToString());
+        int randID = Random.Range(0, 1000);
+        PhotonNetwork.LocalPlayer.NickName = randID.ToString();
+        Debug.Log("PUN OnConnectedToMaster " + PhotonNetwork.NetworkClientState.ToString() + ", Nickname : " + PhotonNetwork.LocalPlayer.NickName);
     }
 
     public void JoinOrCreateRoom()
     {
         if (PhotonNetwork.NetworkClientState == ClientState.ConnectedToMasterServer)
         {
-            PhotonNetwork.JoinOrCreateRoom("111", new RoomOptions { MaxPlayers = 10, EmptyRoomTtl = 0 }, Photon.Realtime.TypedLobby.Default);
+            PhotonNetwork.JoinOrCreateRoom("111", new RoomOptions { MaxPlayers = 10, EmptyRoomTtl = 0}, Photon.Realtime.TypedLobby.Default);
         }
     }
 
