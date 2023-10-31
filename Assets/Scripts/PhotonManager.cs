@@ -50,11 +50,6 @@ public class PhotonManager : MonoBehaviourPunCallbacks
         PhotonNetwork.Reconnect();
     }
 
-    public void ConnectToChatRoom(string roomName)
-    {
-
-    }
-
     public override void OnJoinedRoom()
     {
         GameManager.instance.isConnect = true;
@@ -68,6 +63,6 @@ public class PhotonManager : MonoBehaviourPunCallbacks
 
     public override void OnLeftRoom()
     {
-
+        GameManager.instance.isConnect = false;
     }
 }

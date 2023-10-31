@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Photon.Voice.Unity;
+using Photon.Voice.PUN;
 
 public class GameManager : MonoBehaviour
 {
@@ -8,6 +10,8 @@ public class GameManager : MonoBehaviour
     public bool isConnect = false;
 
     public GameObject MyAvatar = null;
+
+    public Recorder MyRecorder { get; private set; }
 
     private void Awake()
     {
@@ -20,5 +24,10 @@ public class GameManager : MonoBehaviour
         {
             Destroy(this.gameObject);
         }
+    }
+
+    private void Start()
+    {
+        MyRecorder = GetComponent<Recorder>();
     }
 }
